@@ -1,0 +1,34 @@
+// components/results-table/results-table.component.scss
+
+// SCSS
+.table-wrap {
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  th {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .num { text-align: right; }
+  .expander button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  .expand-row {
+    background: #fafafa;
+  }
+  .pager {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.75rem;
+  }
+}

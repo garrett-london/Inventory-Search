@@ -1,0 +1,9 @@
+@InventoryServer_HostAddress = http://localhost:5208
+
+GET {{InventoryServer_HostAddress}}api/inventory/search
+Accept: application/json
+GET {{InventoryServer_HostAddress}}api/inventory/availability/peak
+Accept: application/json
+GET {{InventoryServer_HostAddress}}api/inventory/health
+Accept: application/json
+###

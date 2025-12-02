@@ -1,0 +1,44 @@
+<!--pages/index-page/index-page.component.html -->
+
+<!-- HTML -->
+<!-- class="inventory-search"
+ this is the ugly display of the form
+ requirement is to create a better user interface that is cleaner and more pleasing
+ to the eye
+ -->
+<!-- Hints
+For search utilize the onSearch() method
+for the search values
+(keyup.enter)="onEnterKey()" placeholder="Enter part number, description, or SKU"
+
+Criteria is the value to search
+Part numbers are prefixed with 'AB', 'ZX', 'LM', 'QP', 'RT'
+supplierSku as prefixed with 'SUP', 'VND', 'OEM'
+Description may contain the following words
+'Premium', 'Standard', 'Heavy-Duty', 'Lightweight', 'Compact', 'Industrial', 'Economy'
+'Bearing', 'Valve', 'Coupling', 'Gasket', 'Clamp', 'Fitting', 'Seal', 'Adapter', 'Pump', 'Filter'
+
+branches are 'SEA', 'PDX', 'SFO', 'LAX', 'DEN', 'PHX', 'DAL', 'ORD', 'ATL', 'JFK'
+(change)="onBranchesChange($event)"
+
+Search By
+  <option value="PartNumber">Part Number</option>
+  <option value="Description">Description</option>
+  <option value="SupplierSKU">Supplier SKU</option>
+-->
+<div class="inventory-search">
+
+  <!-- this is where the search criteria should probably be displayed  and entered
+  -->
+  <div class="loading" *ngIf="loading$ | async">Loading…</div>
+  <!-- Simple inline error display -->
+  <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <inventory-results-table
+    [items]="items$ | async"
+    [total]="(total$ | async) ?? 0"
+    [pageSize]="pageSize"
+    (sort)="onSort($event)"
+    (pageChange)="onPageChange($event)">
+  </inventory-results-table>
+</div>

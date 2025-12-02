@@ -1,43 +1,66 @@
 <!--pages/index-page/index-page.component.html -->
 
-<!-- HTML -->
-<!-- class="inventory-search"
- this is the ugly display of the form
- requirement is to create a better user interface that is cleaner and more pleasing
- to the eye
- -->
-<!-- Hints
-For search utilize the onSearch() method
-for the search values
-(keyup.enter)="onEnterKey()" placeholder="Enter part number, description, or SKU"
-
-Criteria is the value to search
-Part numbers are prefixed with 'AB', 'ZX', 'LM', 'QP', 'RT'
-supplierSku as prefixed with 'SUP', 'VND', 'OEM'
-Description may contain the following words
-'Premium', 'Standard', 'Heavy-Duty', 'Lightweight', 'Compact', 'Industrial', 'Economy'
-'Bearing', 'Valve', 'Coupling', 'Gasket', 'Clamp', 'Fitting', 'Seal', 'Adapter', 'Pump', 'Filter'
-
-branches are 'SEA', 'PDX', 'SFO', 'LAX', 'DEN', 'PHX', 'DAL', 'ORD', 'ATL', 'JFK'
-(change)="onBranchesChange($event)"
-
-Search By
-  <option value="PartNumber">Part Number</option>
-  <option value="Description">Description</option>
-  <option value="SupplierSKU">Supplier SKU</option>
--->
+<!-- - Form submits search with criteria/by/branches/availability -->
 <div class="inventory-search">
+  <form [formGroup]="form" (ngSubmit)="onSearch()" class="form">
+    <div class="row">
+      <!-- - Criteria input with Enter key search -->
+      <label>
+        Criteria
+        <input
+          formControlName="criteria"
+          (keyup.enter)="onEnterKey()"
+          placeholder="Enter part number, description, or SKU" />
+      </label>
 
-  <!-- this is where the search criteria should probably be displayed  and entered
-  -->
-  <div class="loading" *ngIf="loading$ | async">Loading…</div>
-  <!-- Simple inline error display -->
+      <!-- - Search by selector for PartNumber/Description/SupplierSKU -->
+      <label>
+        Search by
+        <select formControlName="by">
+          <option value="PartNumber">Part Number</option>
+          <option value="Description">Description</option>
+          <option value="SupplierSKU">Supplier SKU</option>
+        </select>
+      </label>
+
+      <!-- - Branch multiselect propagates via onBranchesChange -->
+      <label>
+        Branches
+        <select multiple formControlName="branches" (change)="onBranchesChange($event)">
+          <option value="SEA">SEA</option>
+          <option value="PDX">PDX</option>
+          <option value="SFO">SFO</option>
+          <option value="LAX">LAX</option>
+          <option value="DEN">DEN</option>
+          <option value="PHX">PHX</option>
+          <option value="DAL">DAL</option>
+          <option value="ORD">ORD</option>
+          <option value="ATL">ATL</option>
+          <option value="JFK">JFK</option>
+        </select>
+      </label>
+
+      <!-- - Availability toggle for inventory-only results -->
+      <label class="checkbox">
+        <input type="checkbox" formControlName="onlyAvailable" />
+        Only available
+      </label>
+
+      <button type="submit" [disabled]="form.invalid || (loading$ | async)">Search</button>
+    </div>
+  </form>
+
+  <!-- - Loading indicator shown during searches -->
+  <div class="loading" *ngIf="loading$ | async">Loading...</div>
+  <!-- - Inline error display for failures -->
   <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
+  <!-- - Results table renders items with paging and sorting -->
   <inventory-results-table
     [items]="items$ | async"
     [total]="(total$ | async) ?? 0"
-    [pageSize]="pageSize"
+    [pageSize]="pageSize$"
+    [pageIndex]="currentPage"
     (sort)="onSort($event)"
     (pageChange)="onPageChange($event)">
   </inventory-results-table>

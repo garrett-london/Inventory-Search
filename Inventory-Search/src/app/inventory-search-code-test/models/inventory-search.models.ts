@@ -14,14 +14,27 @@ export interface InventorySearchQuery {
   sort?: { field: InventoryItemSortableFields; direction: 'asc' | 'desc' };
 }
 
-export type InventoryItemSortableFields =
-  | 'partNumber'
-  | 'description'
-  | 'branch'
-  | 'availableQty'
-  | 'uom'
-  | 'leadTimeDays'
-  | 'lastPurchaseDate';
+// Typed map allows keyof lookup for sort fields while keeping IDE/type safety
+export const InventoryItemSortableFields = {
+    partNumber: true,
+    description: true,
+    branch: true,
+    availableQty: true,
+    uom: true,
+    leadTimeDays: true,
+    lastPurchaseDate: true,
+} as const;
+
+export type InventoryItemSortableFields = keyof typeof InventoryItemSortableFields;
+
+//export type InventoryItemSortableFields =
+//  | 'partNumber'
+//  | 'description'
+//  | 'branch'
+//  | 'availableQty'
+//  | 'uom'
+//  | 'leadTimeDays'
+//  | 'lastPurchaseDate';
 
 export interface InventoryItemLot {
   lotNumber: string;

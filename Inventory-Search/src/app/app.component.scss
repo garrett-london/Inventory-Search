@@ -1,0 +1,120 @@
+.app-shell {
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.app-title {
+    font-size: 2rem;
+    margin: 0;
+}
+
+.subtitle {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 999;
+    width: min(320px, calc(100% - 2rem));
+}
+
+.toast {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 8px;
+    padding: 0.75rem;
+    color: var(--text, #111827);
+}
+
+.toast__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.toast__badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.toast__body {
+    line-height: 1.4;
+}
+
+.toast__header button {
+    background: transparent;
+    border: none;
+    color: var(--muted, #6b7280);
+    font-size: 1rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    line-height: 1;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.toast__header button:hover {
+    background: #94a3b826;
+}
+
+.toast.info {
+    border-color: #3b82f659;
+    background: #eff6fff2;
+}
+
+.toast.info .toast__badge {
+    background: #3b82f61e;
+    color: #1d4ed8;
+}
+
+.toast.success {
+    border-color: #16a34a59;
+    background: #f0fdf4f2;
+}
+
+.toast.success .toast__badge {
+    background: #16a34a1e;
+    color: #15803d;
+}
+
+.toast.warning {
+    border-color: #f59e0b59;
+    background: #fffbebf2;
+}
+
+.toast.warning .toast__badge {
+    background: #f59e0b1e;
+    color: #c2410c;
+}
+
+.toast.error {
+    border-color: #ef444466;
+    background: #fef2f2f7;
+}
+
+.toast.error .toast__badge {
+    background: #ef444424;
+    color: #b91c1c;
+}

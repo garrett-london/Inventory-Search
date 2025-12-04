@@ -1,34 +1,18 @@
-
-//services/inventory-search-api.service.ts
-
-// TypeScript
-import {HttpClient, HttpParams} from '@angular/common/http';
-import {Inject, Injectable, InjectionToken} from '@angular/core';
-import {Observable, throwError} from 'rxjs';
-import {catchError, shareReplay} from 'rxjs/operators';
-import {
-  ApiEnvelope,
-  InventorySearchQuery,
-  PagedInventoryResponse,
-  PeakAvailability,
-} from '../models/inventory-search.models';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Inject, Injectable, InjectionToken } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { catchError, shareReplay } from 'rxjs/operators';
+import { ApiEnvelope, InventorySearchQuery, PagedInventoryResponse, PeakAvailability } from '../models/inventory-search.models';
 
 export const INVENTORY_API_BASE = new InjectionToken<string>('INVENTORY_API_BASE');
 
-// TTL 60s, keep up to 5 cached queries
 const CACHE_TTL_MS = 60_000;
 const CACHE_MAX_ENTRIES = 5;
 
-interface CacheEntry<T> {
-  key: string;
-  expiry: number;
-  obs$: Observable<T>;
-}
-
 @Injectable({ providedIn: 'root' })
 export class InventorySearchApiService {
-  private cache: CacheEntry<ApiEnvelope<PagedInventoryResponse>>[] = [];
-  private peakCache: CacheEntry<ApiEnvelope<PeakAvailability>>[] = [];
+  private searchCache = new Map<string, { expiry: number; obs$: Observable<ApiEnvelope<PagedInventoryResponse>> }>();
+  private peakCache = new Map<string, { expiry: number; obs$: Observable<ApiEnvelope<PeakAvailability>> }>();
 
   constructor(
     private readonly http: HttpClient,
@@ -36,116 +20,96 @@ export class InventorySearchApiService {
   ) {}
 
   search(query: InventorySearchQuery): Observable<ApiEnvelope<PagedInventoryResponse>> {
-      const now = Date.now();
-      // Keep a small in-memory cache with expiration; reuse in-flight/completed observables.
-      this.cache = this.cache.filter((entry) => entry.expiry > now);
-      // Derive a stable cache key from the query (include all fields that affect results).
-      const key = this.cacheKey(query);
-      const hit = this.cache.find((entry) => entry.key === key);
-      if (hit) {
-          return hit.obs$;
-      }
+    const key = this.cacheKey(query);
+    const cached = this.getCached(this.searchCache, key);
+    if (cached) {
+      return cached;
+    }
 
-      // Translate the query into HTTP params; include optional fields only when present.
-      let params = new HttpParams()
-          .set('criteria', query.criteria)
-          .set('by', query.by)
-          .set('page', query.page.toString())
-          .set('size', query.size.toString());
+    let params = new HttpParams()
+      .set('criteria', query.criteria)
+      .set('by', query.by)
+      .set('page', query.page.toString())
+      .set('size', query.size.toString());
 
-      if (query.branches.length) {
-          params = params.set('branches', query.branches.join(','));
-      }
-      if (query.onlyAvailable) {
-          params = params.set('onlyAvailable', String(query.onlyAvailable));
-      }
-      if (query.sort) {
-          params = params.set('sort', `${query.sort.field},${query.sort.direction}`);
-      }
+    if (query.branches.length) {
+      params = params.set('branches', query.branches.join(','));
+    }
+    if (query.onlyAvailable) {
+      params = params.set('onlyAvailable', String(query.onlyAvailable));
+    }
+    if (query.sort) {
+      params = params.set('sort', `${query.sort.field}:${query.sort.direction}`);
+    }
 
-      // Avoid mixing UI concerns; this layer should only compose and return data streams.
-      const obs$ = this.http
-          .get<ApiEnvelope<PagedInventoryResponse>>(`${this.baseUrl}/inventory/search`, { params })
-          .pipe(
-              // Return a shared observable so multiple subscribers don't duplicate requests.
-              shareReplay({ bufferSize: 1, refCount: false }),
-              catchError((err) => {
-                  this.evict(this.cache, key);
-                  return throwError(() => err);
-              })
-          );
+    const obs$ = this.http
+      .get<ApiEnvelope<PagedInventoryResponse>>(`${this.baseUrl}/inventory/search`, { params })
+      .pipe(
+        shareReplay({ bufferSize: 1, refCount: false }),
+        catchError((err) => {
+          this.searchCache.delete(key);
+          return throwError(() => err);
+        })
+      );
 
-      this.remember(this.cache, { key, obs$ });
-      return obs$;
+    this.remember(this.searchCache, key, obs$);
+    return obs$;
   }
 
   getPeakAvailability(partNumber: string): Observable<ApiEnvelope<PeakAvailability>> {
-      const now = Date.now();
-      // Use the part number to form a cache key for this lookup.
-      // Evict stale entries before attempting a cache hit.
-      this.peakCache = this.peakCache.filter((entry) => entry.expiry > now);
-      const key = `peak:${partNumber}`;
-      const hit = this.peakCache.find((entry) => entry.key === key);
-      if (hit) {
-          return hit.obs$;
-      }
+    const key = `peak:${partNumber}`;
+    const cached = this.getCached(this.peakCache, key);
+    if (cached) {
+      return cached;
+    }
 
-      // Otherwise, issue a GET with the partNumber as a query param and share the result.
-      const params = new HttpParams().set('partNumber', partNumber);
-      const obs$ = this.http
-          .get<ApiEnvelope<PeakAvailability>>(`${this.baseUrl}/inventory/availability/peak`, { params })
-          .pipe(
-              // Return a shared observable so multiple subscribers don't duplicate requests.
-              shareReplay({ bufferSize: 1, refCount: false }),
-              catchError((err) => {
-                  this.evict(this.peakCache, key);
-                  return throwError(() => err);
-              })
-          );
+    const params = new HttpParams().set('partNumber', partNumber);
+    const obs$ = this.http
+      .get<ApiEnvelope<PeakAvailability>>(`${this.baseUrl}/inventory/availability/peak`, { params })
+      .pipe(
+        shareReplay({ bufferSize: 1, refCount: false }),
+        catchError((err) => {
+          this.peakCache.delete(key);
+          return throwError(() => err);
+        })
+      );
 
-      // Remember the observable with a TTL (time to live); keep this method free of UI concerns.
-      this.remember(this.peakCache, { key, obs$ });
-      return obs$;
+    this.remember(this.peakCache, key, obs$);
+    return obs$;
   }
 
-  private remember<T>(
-    cache: CacheEntry<T>[],
-    entry: { key: string; obs$: Observable<T> }
-  ) {
-      // Consider how expiration (TTL) interacts with capacity-based eviction.
-      const now = Date.now();
-      cache.push({ ...entry, expiry: now + CACHE_TTL_MS });
-      // Keep the cache small and predictable; decide what to evict when full.
-      if (cache.length > CACHE_MAX_ENTRIES) {
-          cache.shift();
-      }
-      // Think about whether failed results should be cached the same way as successful ones.
-      // Keep this purely about data/memoization; avoid UI/side-effects here.
+  private getCached<T>(cache: Map<string, { expiry: number; obs$: Observable<T> }>, key: string) {
+    const entry = cache.get(key);
+    if (!entry || entry.expiry < Date.now()) {
+      cache.delete(key);
+      return undefined;
+    }
+    return entry.obs$;
   }
 
-  private evict<T>(cache: CacheEntry<T>[], key: string) {
-      const idx = cache.findIndex((entry) => entry.key === key);
-      if (idx !== -1) {
-          cache.splice(idx, 1);
-      }
+  private remember<T>(cache: Map<string, { expiry: number; obs$: Observable<T> }>, key: string, obs$: Observable<T>) {
+    cache.set(key, { obs$, expiry: Date.now() + CACHE_TTL_MS });
+    this.trim(cache);
+  }
+
+  private trim(cache: Map<string, unknown>) {
+    while (cache.size > CACHE_MAX_ENTRIES) {
+      const oldestKey = cache.keys().next().value;
+      cache.delete(oldestKey);
+    }
   }
 
   private cacheKey(q: InventorySearchQuery): string {
-      // - Produce a stable key that uniquely represents the query.
-      const branches = [...q.branches].sort().join('|');
-      const sort = q.sort ? `${q.sort.field}:${q.sort.direction}` : '';
-      // - Normalize values (e.g., trim, lowercase) to avoid duplicate keys for equivalent inputs.
-      // - Ensure ordering doesn't affect the key (e.g., sort arrays like branches).
-      // - Include every parameter that can change results; omit those that do not.
-      // - Choose delimiters that won't collide with real data.
-      return [
-          q.criteria.trim().toLowerCase(),
-          q.by,
-          branches,
-          q.onlyAvailable ? '1' : '0',
-          q.page,
-          q.size,
-          sort,
-      ].join('::');
+    const branches = [...q.branches].sort().join('|');
+    const sort = q.sort ? `${q.sort.field}:${q.sort.direction}` : '';
+    return [
+      q.criteria.trim().toLowerCase(),
+      q.by,
+      branches,
+      q.onlyAvailable ? '1' : '0',
+      q.page,
+      q.size,
+      sort,
+    ].join('::');
   }
 }

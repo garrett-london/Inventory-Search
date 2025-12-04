@@ -1,35 +1,132 @@
-
-//pages/index-page/index-page.component.scss
-// SCSS
-// this is the ugly display of the form
-// requirement is to create a better user interface that is cleaner and more pleasing
-// to the eye
 .inventory-search {
-  .form {
-    display: grid;
-    gap: 1rem;
-    .row {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(160px, 1fr));
-      gap: 1rem;
-      align-items: end;
-    }
-    label {
-      display: flex;
-      flex-direction: column;
-      font-size: 0.9rem;
-    }
-    .checkbox {
-      flex-direction: row;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    button {
-      height: 2.25rem;
-    }
-  }
-  .loading {
-    margin: 0.5rem 0;
-    color: #555;
-  }
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
 }
+
+.form {
+    display: grid;
+    gap: 1.25rem;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
+    padding: 1rem;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 0.75rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+    select[multiple] {
+        min-height: 140px;
+    }
+
+    input:focus,
+    select:focus {
+        outline: none;
+        border-color: #e497c3;
+        box-shadow: 0 0 0 3px #f8e3ef;
+    }
+
+.checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--text);
+}
+
+    .checkbox input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--accent);
+    }
+
+button[type='submit'] {
+    padding: 0.75rem 1.1rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.2s ease;
+    box-shadow: 0 8px 18px #f6dceb;
+}
+
+    button[type='submit']:hover {
+        background: var(--accent-2);
+    }
+
+    button[type='submit']:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+        box-shadow: none;
+    }
+
+.loading,
+.error {
+    margin: 0.75rem 0;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.loading {
+    background: #ecf7f2;
+    color: var(--success);
+}
+
+.error {
+    background: #fbeeee;
+    color: var(--error);
+}
+
+.results-wrapper {
+    position: relative;
+}
+
+.results-wrapper--disabled {
+    cursor: not-allowed;
+}
+
+    .results-wrapper--disabled inventory-results-table {
+        pointer-events: none;
+        opacity: 0.5;
+        filter: grayscale(0.3);
+        transform: translateY(1px);
+    }
+
+    .results-wrapper--disabled::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 8px;
+        background: #f2f2f2;
+        pointer-events: none;
+    }

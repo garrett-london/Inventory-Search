@@ -1,0 +1,50 @@
+<div class="branch-select" [class.branch-select--disabled]="disabled">
+    <div class="branch-select__control" (click)="togglePanel()">
+        <div class="branch-select__tags">
+            <ng-container *ngIf="selectedOptions.length; else emptyState">
+                <span class="branch-tag"
+                      *ngFor="let opt of visibleSelectedOptions">
+                    {{ opt.label }}
+
+                    <button type="button"
+                            class="branch-tag__remove"
+                            *ngIf="isOpen"
+                            (click)="removeBranch(opt, $event)"
+                            aria-label="Remove branch">
+                        x
+                    </button>
+                </span>
+
+                <span class="branch-tag branch-tag--more"
+                      *ngIf="hasHiddenSelectedOptions">
+                    ...
+                </span>
+            </ng-container>
+
+            <ng-template #emptyState>
+                <span class="branch-select__placeholder">
+                    {{ placeholder }}
+                </span>
+            </ng-template>
+        </div>
+
+        <div class="branch-select__meta">
+            <span class="branch-select__count" *ngIf="selectedOptions.length">
+                {{ selectedOptions.length }} selected
+            </span>
+            <span class="branch-select__chevron" aria-hidden="true">
+                v
+            </span>
+        </div>
+    </div>
+
+    <div class="branch-select__panel" *ngIf="isOpen">
+        <button type="button"
+                class="branch-select__option"
+                *ngFor="let opt of options"
+                [class.branch-select__option--selected]="selectedSet.has(opt.value)"
+                (click)="toggleBranch(opt)">
+            {{ opt.label }}
+        </button>
+    </div>
+</div>

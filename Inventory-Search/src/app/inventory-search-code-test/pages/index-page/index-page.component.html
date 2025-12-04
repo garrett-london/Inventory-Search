@@ -1,67 +1,52 @@
-<!--pages/index-page/index-page.component.html -->
-
-<!-- - Form submits search with criteria/by/branches/availability -->
 <div class="inventory-search">
-  <form [formGroup]="form" (ngSubmit)="onSearch()" class="form">
-    <div class="row">
-      <!-- - Criteria input with Enter key search -->
-      <label>
-        Criteria
-        <input
-          formControlName="criteria"
-          (keyup.enter)="onEnterKey()"
-          placeholder="Enter part number, description, or SKU" />
-      </label>
+    <form [formGroup]="form" (ngSubmit)="onSearch()" class="form">
+        <div class="row">
+            <label>
+                Criteria
+                <input formControlName="criteria"
+                       (keyup.enter)="onEnterKey()"
+                       placeholder="Enter part number, description, or SKU" />
+            </label>
 
-      <!-- - Search by selector for PartNumber/Description/SupplierSKU -->
-      <label>
-        Search by
-        <select formControlName="by">
-          <option value="PartNumber">Part Number</option>
-          <option value="Description">Description</option>
-          <option value="SupplierSKU">Supplier SKU</option>
-        </select>
-      </label>
+            <label>
+                Search by
+                <select formControlName="by">
+                    <option value="PartNumber">Part Number</option>
+                    <option value="Description">Description</option>
+                    <option value="SupplierSKU">Supplier SKU</option>
+                </select>
+            </label>
 
-      <!-- - Branch multiselect propagates via onBranchesChange -->
-      <label>
-        Branches
-        <select multiple formControlName="branches" (change)="onBranchesChange($event)">
-          <option value="SEA">SEA</option>
-          <option value="PDX">PDX</option>
-          <option value="SFO">SFO</option>
-          <option value="LAX">LAX</option>
-          <option value="DEN">DEN</option>
-          <option value="PHX">PHX</option>
-          <option value="DAL">DAL</option>
-          <option value="ORD">ORD</option>
-          <option value="ATL">ATL</option>
-          <option value="JFK">JFK</option>
-        </select>
-      </label>
+            <div class="field">
+                <label class="field__label" for="branches-select">
+                    Branches
+                </label>
 
-      <!-- - Availability toggle for inventory-only results -->
-      <label class="checkbox">
-        <input type="checkbox" formControlName="onlyAvailable" />
-        Only available
-      </label>
+                <branch-multi-select id="branches-select"
+                                     formControlName="branches">
+                </branch-multi-select>
+            </div>
+            <!-- - Availability toggle for inventory-only results -->
+            <label class="checkbox">
+                <input type="checkbox" formControlName="onlyAvailable" />
+                Only available
+            </label>
 
-      <button type="submit" [disabled]="form.invalid || (loading$ | async)">Search</button>
+            <button type="submit" [disabled]="form.invalid || (loading$ | async)">Search</button>
+        </div>
+    </form>
+
+    <div class="loading" *ngIf="loading$ | async">Loading...</div>
+    <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <div class="results-wrapper"
+         [class.results-wrapper--disabled]="loading$ | async">
+        <inventory-results-table [items]="items$ | async"
+                                 [total]="(total$ | async) ?? 0"
+                                 [pageSize]="pageSize"
+                                 [pageIndex]="currentPage"
+                                 (sort)="onSort($event)"
+                                 (pageChange)="onPageChange($event)">
+        </inventory-results-table>
     </div>
-  </form>
-
-  <!-- - Loading indicator shown during searches -->
-  <div class="loading" *ngIf="loading$ | async">Loading...</div>
-  <!-- - Inline error display for failures -->
-  <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
-
-  <!-- - Results table renders items with paging and sorting -->
-  <inventory-results-table
-    [items]="items$ | async"
-    [total]="(total$ | async) ?? 0"
-    [pageSize]="pageSize$"
-    [pageIndex]="currentPage"
-    (sort)="onSort($event)"
-    (pageChange)="onPageChange($event)">
-  </inventory-results-table>
 </div>

@@ -1,3 +1,23 @@
-<!-- HTML -->
-<h1 class="app-title">{{ title }}</h1>
-<inv-index-page></inv-index-page>
+<div class="toast-container" *ngIf="toasts.length" aria-live="polite" aria-atomic="true">
+  <div
+    class="toast"
+    *ngFor="let toast of toasts; trackBy: trackByToast"
+    [ngClass]="toast.level">
+    <div class="toast__header">
+      <span class="toast__badge">{{ toast.level | titlecase }}</span>
+      <button type="button" (click)="dismiss(toast.id)" aria-label="Dismiss notification">&times;</button>
+    </div>
+    <div class="toast__body">{{ toast.text }}</div>
+  </div>
+</div>
+
+<div class="app-shell">
+  <div class="header">
+    <div>
+      <h1 class="app-title">{{ title }}</h1>
+      <div class="subtitle">Search parts, check availability, and review branch details</div>
+    </div>
+  </div>
+
+  <inv-index-page></inv-index-page>
+</div>

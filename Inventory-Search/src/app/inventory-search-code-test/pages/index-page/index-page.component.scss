@@ -66,7 +66,7 @@ select {
         accent-color: var(--accent);
     }
 
-button[type='submit'] {
+button[type=submit] {
     padding: 0.75rem 1.1rem;
     background: var(--accent);
     color: #fff;
@@ -79,11 +79,11 @@ button[type='submit'] {
     box-shadow: 0 8px 18px #f6dceb;
 }
 
-    button[type='submit']:hover {
+    button[type=submit]:hover {
         background: var(--accent-2);
     }
 
-    button[type='submit']:disabled {
+    button[type=submit]:disabled {
         cursor: not-allowed;
         opacity: 0.6;
         box-shadow: none;

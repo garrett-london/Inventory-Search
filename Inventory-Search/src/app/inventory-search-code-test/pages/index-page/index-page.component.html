@@ -26,19 +26,16 @@
                                      formControlName="branches">
                 </branch-multi-select>
             </div>
-            <!-- - Availability toggle for inventory-only results -->
             <label class="checkbox">
                 <input type="checkbox" formControlName="onlyAvailable" />
                 Only available
             </label>
 
-            <button type="submit" [disabled]="form.invalid || (loading$ | async)">Search</button>
+            <button type="submit" [disabled]="form.invalid">Search</button>
         </div>
     </form>
 
     <div class="loading" *ngIf="loading$ | async">Loading...</div>
-    <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
-
     <div class="results-wrapper"
          [class.results-wrapper--disabled]="loading$ | async">
         <inventory-results-table [items]="items$ | async"
@@ -50,3 +47,10 @@
         </inventory-results-table>
     </div>
 </div>
+
+<!-- {done} TODO: Add better styling to pagination-->
+<!-- {done} TODO: modify the functionality of the search feature such that Searching with 0 branches builds a query with all branches selected. -->
+<!-- {done} TODO: (probably in the results-table component) Make table dynamic as width of webpage changes. -->
+<!-- {done} TODO: Make headers dynamic, when scrolling past their view, they should hover the table to the column header remains visible when scrolling down.-->
+<!-- {done} TODO: modify the program to not require an input for criteria() basically "search *", retrieving all database data if left empty.-->
+<!-- {done} TODO: Display count of results as "Showing [pageNumber*(pagesize-1)+1]-[pageNumber*pagesize] of [Total] results-->

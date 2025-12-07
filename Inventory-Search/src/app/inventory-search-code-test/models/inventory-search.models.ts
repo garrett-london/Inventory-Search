@@ -27,15 +27,6 @@ export const InventoryItemSortableFields = {
 
 export type InventoryItemSortableFields = keyof typeof InventoryItemSortableFields;
 
-//export type InventoryItemSortableFields =
-//  | 'partNumber'
-//  | 'description'
-//  | 'branch'
-//  | 'availableQty'
-//  | 'uom'
-//  | 'leadTimeDays'
-//  | 'lastPurchaseDate';
-
 export interface InventoryItemLot {
   lotNumber: string;
   qty: number;

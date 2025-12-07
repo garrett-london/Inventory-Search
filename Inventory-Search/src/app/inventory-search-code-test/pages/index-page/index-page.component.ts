@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, InjectionToken } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, InjectionToken, AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BehaviorSubject, Observable, Subject, of } from 'rxjs';
-import { catchError, debounceTime, filter, finalize, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { catchError, debounceTime, filter, finalize, map, shareReplay, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { InventoryItem, InventoryItemSortableFields, InventorySearchQuery, SearchBy } from '../../models/inventory-search.models';
 import { InventorySearchApiService } from '../../services/inventory-search-api.service';
 import { ToastService } from '../../services/toast.service';
@@ -15,9 +15,11 @@ export const INVENTORY_SEARCH_DEBOUNCE_MS = new InjectionToken<number>('INVENTOR
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class IndexPageComponent implements OnDestroy, OnInit {
+export class IndexPageComponent implements OnDestroy, OnInit, AfterViewInit {
     readonly defaultSortField: InventoryItemSortableFields = 'partNumber';
     readonly pageSize = 20;
+    
+    private readonly allBranches = ['CLT', 'DEN', 'SLC', 'SEA', 'STL', 'LAX'];
 
     private readonly debounceMs = 50;
     private readonly destroy$ = new Subject<void>();
@@ -31,7 +33,6 @@ export class IndexPageComponent implements OnDestroy, OnInit {
     items$!: Observable<InventoryItem[]>;
     total$!: Observable<number>;
     readonly loading$ = new BehaviorSubject<boolean>(false);
-    errorMessage: string | null = null;
 
     form: FormGroup;
 
@@ -41,9 +42,9 @@ export class IndexPageComponent implements OnDestroy, OnInit {
         private readonly toastService: ToastService
     ) {
         this.form = this.fb.group({
-            criteria: ['', Validators.required],
+            criteria: [''],
             by: ['PartNumber' as SearchBy, Validators.required],
-            branches: [[] as string[]],
+            branches: [this.allBranches.slice()],
             onlyAvailable: [false],
         });
     }
@@ -52,34 +53,48 @@ export class IndexPageComponent implements OnDestroy, OnInit {
         const search$ = this.searchTrigger$.pipe(
             takeUntil(this.destroy$),
             debounceTime(this.debounceMs),
-            filter(() => !this.loading$.value && this.form.valid),
-            tap(() => {
-                this.errorMessage = null;
-                this.loading$.next(true);
-            }),
+            filter(() => this.form.valid),
             map(() => this.buildQuery()),
-            switchMap((query) =>
-                this.api.search(query).pipe(
+            switchMap((query) => {
+                this.loading$.next(true);
+                let cancelled = true;
+                return this.api.search(query).pipe(
+                    tap(() => {
+                        cancelled = false;
+                    }),
                     map((resp) => {
                         if (resp.isFailed || !resp.data) {
-                            this.errorMessage = resp.message ?? 'Search failed';
-                            this.toastService.error(this.errorMessage ?? 'An unexpected error has occurred.');
-                            return { total: 0, items: [] };
+                            const message = resp.message ?? 'Search failed';
+                            this.toastService.error(message ?? 'An unexpected error has occurred.');
+                            return { total: -1, items: [] };
                         }
+                        cancelled = false;
                         return resp.data;
                     }),
                     catchError((err) => {
-                        this.errorMessage = err?.message ?? 'Search failed';
-                        this.toastService.error(this.errorMessage ?? 'An unexpected error has occurred.');
-                        return of({ total: 0, items: [] });
+                        const message = err?.message ?? 'Search failed';
+                        this.toastService.error(message ?? 'An unexpected error has occurred.');
+                        cancelled = false;
+                        return of({ total: -1, items: [] });
                     }),
-                    finalize(() => this.loading$.next(false))
-                )
-            )
+                    finalize(() => {
+                        if (cancelled) {
+                            this.toastService.info('Previous search cancelled.');
+                        }
+                        this.loading$.next(false);
+                    })
+                );
+            }),
+            shareReplay({ bufferSize: 1, refCount: true })
         );
 
         this.items$ = search$.pipe(map((r) => r.items));
         this.total$ = search$.pipe(map((r) => r.total));
+    }
+
+    ngAfterViewInit(): void {
+        // delay initial search until view bindings are subscribed.
+        Promise.resolve().then(() => this.onSearch());
     }
 
     onSearch() {
@@ -96,15 +111,10 @@ export class IndexPageComponent implements OnDestroy, OnInit {
     }
 
     onEnterKey() {
-        if (!this.loading$.value) {
-            this.onSearch();
-        }
+        this.onSearch();
     }
 
     onPageChange(pageIndex: number) {
-        if (this.loading$.value) {
-            return;
-        }
         this.currentPage$.next(pageIndex);
         this.searchTrigger$.next();
     }

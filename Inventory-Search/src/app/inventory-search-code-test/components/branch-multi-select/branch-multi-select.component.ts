@@ -31,19 +31,18 @@ interface BranchOption {
         },
     ],
 })
+
+    // todo? pass branchoptions[] array to constructor, after requesting availabilty from the api. Use this to define the options variable.
+    //  Not sure many use-cases would really demand this much adaptation to varying branch providers.
 export class BranchMultiSelectComponent implements ControlValueAccessor, OnChanges {
     @Input() placeholder = 'Select branches';
     @Input() options: BranchOption[] = [
-        { value: 'SEA', label: 'SEA' },
-        { value: 'PDX', label: 'PDX' },
-        { value: 'SFO', label: 'SFO' },
-        { value: 'LAX', label: 'LAX' },
+        { value: 'CLT', label: 'CLT' }, 
         { value: 'DEN', label: 'DEN' },
-        { value: 'PHX', label: 'PHX' },
-        { value: 'DAL', label: 'DAL' },
-        { value: 'ORD', label: 'ORD' },
-        { value: 'ATL', label: 'ATL' },
-        { value: 'JFK', label: 'JFK' },
+        { value: 'SLC', label: 'SLC' },
+        { value: 'SEA', label: 'SEA' },
+        { value: 'STL', label: 'STL' },
+        { value: 'LAX', label: 'LAX' },
     ];
 
     isOpen = false;
@@ -60,6 +59,13 @@ export class BranchMultiSelectComponent implements ControlValueAccessor, OnChang
         private readonly cdr: ChangeDetectorRef,
         private readonly host: ElementRef<HTMLElement>
     ) { }
+
+    requestAvailability(): void {
+
+        //petform get request to the availability endpoint
+
+        //assign returned branch values to the options variable
+    }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['options']) {
@@ -89,7 +95,11 @@ export class BranchMultiSelectComponent implements ControlValueAccessor, OnChang
     }
 
     get selectedOptions(): BranchOption[] {
-        return this.options.filter(o => this.selectedSet.has(o.value));
+        //when no providers are selected, treat it like a "search all"
+        var selected = this.options.filter(o => this.selectedSet.has(o.value));
+        if (selected.length == 0)
+            return this.options
+        return selected
     }
 
     get visibleSelectedOptions(): BranchOption[] {

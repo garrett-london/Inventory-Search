@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { InventoryItem, PeakAvailability } from '../../models/inventory-search.models';
 import { InventorySearchApiService } from '../../services/inventory-search-api.service';
 import { ToastService } from '../../services/toast.service';
 import { finalize } from 'rxjs/operators';
-
 
 @Component({
     selector: 'inventory-results-table',
@@ -12,7 +11,7 @@ import { finalize } from 'rxjs/operators';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class ResultsTableComponent {
+export class ResultsTableComponent implements OnChanges {
     @Input() items: InventoryItem[] | null = [];
     @Input() total = 0;
     @Input() pageSize = 20;
@@ -24,7 +23,7 @@ export class ResultsTableComponent {
     expanded: Record<string, boolean> = {};
     peakLoading: Record<string, boolean> = {};
     peakByPart: Record<string, PeakAvailability | null> = {};
-    errorMessage: string | null = null;
+    totalResults: number = -1;
 
     headers: Array<{ label: string; field: keyof InventoryItem; sortable: boolean }> = [
         { label: 'Part Number', field: 'partNumber', sortable: true },
@@ -43,6 +42,17 @@ export class ResultsTableComponent {
         private readonly toastService: ToastService,
     ) { }
 
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes['total']) {
+            var next = changes['total'].currentValue;
+            if (typeof next === 'number')
+                next = next > 0 ? next : -1;
+            else
+                next = -1;
+            this.totalResults = next;
+        }
+    }
+
     onHeaderClick(field: keyof InventoryItem) {
         this.sort.emit(field);
     }
@@ -54,7 +64,6 @@ export class ResultsTableComponent {
 
     fetchPeakAvailability(item: InventoryItem) {
         const key = this.itemKey(item);
-        this.errorMessage = null;
         this.peakLoading[key] = true;
 
         this.api
@@ -69,12 +78,11 @@ export class ResultsTableComponent {
                 next: (resp) => {
                     if (resp.isFailed || !resp.data) {
                         this.peakByPart[key] = null;
-                        this.errorMessage = resp.message ?? 'Failed to load peak availability';
-                        this.toastService.error(this.errorMessage);
+                        const message = resp.message ?? 'Failed to load peak availability';
+                        this.toastService.error(message);
                         return;
                     }
                     this.peakByPart[key] = resp.data;
-                    this.errorMessage = null;
                     this.cdr.markForCheck();
                 },
                 error: (err) => {
@@ -85,9 +93,8 @@ export class ResultsTableComponent {
                             : err?.message ??
                             err?.error?.message ??
                             'Failed to load peak availability';
-                    this.errorMessage = msg;
-                    this.cdr.markForCheck();
                     this.toastService.error(msg);
+                    this.cdr.markForCheck();
                 },
             });
     }
@@ -128,5 +135,14 @@ export class ResultsTableComponent {
 
     peakFor(item: InventoryItem): PeakAvailability | null | undefined {
         return this.peakByPart[this.itemKey(item)];
+    }
+
+    showingRange() {
+        if (this.totalResults < 0 || (this.items?.length ?? 0) === 0) {
+            return null;
+        }
+        const start = this.pageIndex * this.pageSize + 1;
+        const end = Math.min(this.totalResults, start + this.pageSize - 1);
+        return { start, end };
     }
 }

@@ -1,72 +1,71 @@
 .table-wrap {
-    margin-top: 1.25rem;
+    margin: 1.25rem 0;
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow: hidden;
     box-shadow: var(--shadow);
+    overflow: auto;
+    max-height: 500px;
 }
 
-.table-wrap table {
-    width: 100%;
-    border-collapse: collapse;
-    color: var(--text);
-}
+    .table-wrap table {
+        width: max-content;
+        min-width: 100%;
+        border-collapse: collapse;
+        color: var(--text);
+    }
 
-.table-wrap thead {
-    background: var(--panel-2);
-}
+    .table-wrap thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--panel-2);
+    }
 
-.table-wrap th,
-.table-wrap td {
-    padding: 0.85rem 0.9rem;
-    border-bottom: 1px solid var(--border);
-    text-align: left;
-    font-size: 0.95rem;
-}
+    .table-wrap th,
+    .table-wrap td {
+        padding: 0.85rem 0.9rem;
+        border-bottom: 1px solid var(--border);
+        text-align: center;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
 
-.table-wrap th {
-    user-select: none;
-    white-space: nowrap;
-    color: var(--text);
-    font-weight: 700;
-    letter-spacing: 0.15px;
-}
+    .table-wrap th {
+        user-select: none;
+        font-weight: 700;
+        letter-spacing: 0.15px;
+    }
 
-.table-wrap th.sortable {
-    cursor: pointer;
-}
+        .table-wrap th.sortable {
+            cursor: pointer;
+        }
 
-.table-wrap tbody tr:hover {
-    background: #c2187a0d;
-}
+    .table-wrap tbody tr:hover {
+        background: #c2187a0d;
+    }
 
-.table-wrap .num {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
+    .table-wrap .num {
+        font-variant-numeric: tabular-nums;
+    }
 
-.table-wrap .expander button {
-    border: 1px solid var(--border);
-    background: var(--panel-2);
-    color: var(--text);
-    border-radius: 8px;
-    width: 34px;
-    height: 34px;
-    cursor: pointer;
-}
+    .table-wrap .expander button {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+    }
 
-.table-wrap .expander button:hover {
-    background: #c2187a19;
-}
+        .table-wrap .expander button:hover {
+            background: #c2187a19;
+        }
 
-.table-wrap .expand-row {
-    background: #c2187a0a;
-}
+    .table-wrap .expand-row {
+        background: #c2187a0a;
+    }
 
-.table-wrap .expand-row td {
-    border-bottom: none;
-}
+        .table-wrap .expand-row td {
+            border-bottom: none;
+        }
 
 .lots,
 .peak {
@@ -86,7 +85,18 @@
     color: var(--muted);
 }
 
-.pager,
+.showing {
+    display: block;
+    margin: 1.25rem auto 0.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 0.15rem 0.85rem;
+    width: fit-content;
+    position: relative;
+}
+
 .error,
 .empty {
     margin-top: 1rem;
@@ -96,30 +106,57 @@
     color: var(--text);
 }
 
-.pager button {
-    padding: 0.55rem 0.9rem;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--panel-2);
+.pager {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
     color: var(--text);
-    cursor: pointer;
 }
 
-.pager button:hover:enabled {
-    background: #c2187a14;
-    border-color: #c2187a59;
-}
+    .pager button {
+        width: 2.4rem;
+        height: 2.4rem;
+        padding: 0;
+        border-radius: 50%;
+        border: none;
+        background: #f06292;
+        color: #ffffff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        line-height: 1;
+        box-shadow: 0 4px 10px #0000002a;
+    }
 
-.pager button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+        .pager button:hover:enabled {
+            background: #f48fb1;
+            box-shadow: 0 6px 14px #00000033;
+        }
+
+        .pager button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
 
 .action-col {
     text-align: center;
     min-width: 160px;
 }
 
+.table-wrap {
+    margin: 0 0 1.25rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: auto;
+    max-height: 500px;
+}
 .table-wrap td button {
     padding: 0.45rem 0.75rem;
     border-radius: 10px;
@@ -129,23 +166,23 @@
     cursor: pointer;
 }
 
-.table-wrap td button:hover:enabled {
-    border-color: #c2187a59;
-    box-shadow: 0 8px 18px #0000001f;
-}
+    .table-wrap td button:hover:enabled {
+        border-color: #c2187a59;
+        box-shadow: 0 8px 18px #0000001f;
+    }
 
-.table-wrap td button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    box-shadow: none;
-}
+    .table-wrap td button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
 
-.table-wrap td button .btn-loaded {
-    font-weight: 600;
-    font-size: 0.85rem;
-    letter-spacing: 0.02em;
-    color: var(--success);
-}
+    .table-wrap td button .btn-loaded {
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.02em;
+        color: var(--success);
+    }
 
 .error {
     padding: 0.85rem 1rem;

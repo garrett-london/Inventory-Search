@@ -1,5 +1,6 @@
-<div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
-
+<div class="showing" *ngIf="showingRange() as range">
+    {{ range.start }}-{{ range.end }} of {{ totalResults }} results
+</div>
 <div class="table-wrap" *ngIf="(items?.length ?? 0) > 0; else noRows">
     <table>
         <thead>
@@ -81,12 +82,20 @@
 <ng-template #noRows>
     <div class="empty">No results to display.</div>
 </ng-template>
-
-<!-- Simple pagination controls  -->
 <div class="pager" aria-label="Pagination">
-    <button type="button" (click)="goTo(pageIndex - 1)" [disabled]="pageIndex <= 0">Prev</button>
+    <button type="button"
+            class="pager-btn"
+            (click)="goTo(pageIndex - 1)"
+            [disabled]="pageIndex <= 0"
+            aria-label="Previous page"><
+    </button>
+
     <span>Page {{ pageIndex + 1 }} / {{ totalPages(total, pageSize) }}</span>
-    <button type="button" (click)="goTo(pageIndex + 1)" [disabled]="pageIndex >= totalPages(total, pageSize) - 1">
-        Next
+
+    <button type="button"
+            class="pager-btn"
+            (click)="goTo(pageIndex + 1)"
+            [disabled]="pageIndex >= totalPages(total, pageSize) - 1"
+            aria-label="Next page">>
     </button>
 </div>
